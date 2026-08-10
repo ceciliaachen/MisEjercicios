@@ -6,10 +6,10 @@ function dither(image, factor, algorithm)
     console.log(image);
 
     var y;
-    for (y = 0; y < image.height; y++)
+    for (y = 0; y < image.height - 1; y++)
     {
         var x;
-        for (x = 0; x < image.width; x++)
+        for (x = 0; x < image.width - 1; x++)
         {
             // Pixel RGBA
             var oldcolor = indexar(x, y, image.width, image);
