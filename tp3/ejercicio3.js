@@ -66,7 +66,16 @@ cambiar por otra sin tocar lookAt.
 function setupCamera(ui) {
   const azimuth   = ui.az;
   const elevation = ui.el;
-  // ...
+
+  const radio = 3;
+  const x = radio * Math.cos(elevation) * Math.cos(azimuth);
+  const y = radio * Math.sin(elevation);
+  const z = radio * Math.cos(elevation) * Math.sin(azimuth);
+
+  const eye = [x, y, z];
+  const center = [0, 0, 0];
+  const up = [0, 1, 0];
+  return { eye, center, up };
 }
 
 /* TODO: Implementar la matriz de vista (lookAt).
@@ -93,7 +102,25 @@ Notar:
   - Column-major: los arreglos se almacenan por columnas.
 */
 function lookAt(eye, center, up){
-  // ...
+  const minus_w = Vec.normalize(Vec.sub(center, eye));
+  const u = Vec.normalize(Vec.cross(minus_w, up));
+  const v = Vec.cross(u, minus_w);
+  const w = Vec.scale(minus_w, -1);
+
+  const rotation = [
+    u[0], v[0], w[0], 0,
+    u[1], v[1], w[1], 0,
+    u[2], v[2], w[2], 0,
+      0 ,   0 ,   0 , 1
+  ];
+  
+  const translation = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    -eye[0], -eye[1], -eye[2], 1
+  ];
+
   return mat4Mul(rotation, translation);
 }
 
@@ -112,7 +139,12 @@ Nota: n y f son las coordenadas z de los planos near/far (negativas, porque la
 cámara mira hacia -Z), por eso n-f > 0.
 */
 function orthographic(left, right, bottom, top, znear, zfar){
-  // ...
+  const orthoMat = [
+    2/(right-left), 0, 0, 0,
+    0, 2/(top-bottom), 0, 0,
+    0, 0, 2/(znear-zfar), 0,
+    -(right+left)/(right-left), -(top+bottom)/(top-bottom), -(znear+zfar)/(znear-zfar), 1
+  ];
   return orthoMat;
 }
 
@@ -129,7 +161,12 @@ hace que w' = z: al dividir por w (perspective divide) aparece la perspectiva.
 */
 function projective(znear, zfar){
   const n = znear, f = zfar;
-  // ...
+  return [
+    n, 0, 0, 0,
+    0, n, 0, 0,
+    0, 0, n+f, 1,
+    0, 0, -f*n, 0
+  ];
 }
 /* TODO: Implementar la matriz de perspectiva como COMPOSICIÓN.
 Tal como se ve en clase, la perspectiva se arma en dos pasos:
@@ -142,7 +179,8 @@ planos near/far (coordenadas z, negativas).
 */
 function perspective(left, right, bottom, top, znear, zfar){
   return mat4Mul(
-    //...
+    orthographic(left, right, bottom, top, znear, zfar),
+    projective(znear, zfar)
   );
 }
 
@@ -159,7 +197,8 @@ La coordenada z se conserva para el z-buffer.
 Ejemplo: ndcToScreen([-1, 1, 0], 800, 600) => [-0.5, -0.5, 0]
 */
 function ndcToScreen(ndc, width, height){
-  // ...
+  const x = (width/2) * ndc[0] + (width-1)/2;
+  const y = -(height/2) * ndc[1] + (height-1)/2;
   return [x,y,ndc[2]]; // coord z se mantiene sin cambios
 }
 
