@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CG TP4 — Rasterización de Triángulos con Baricéntricas (JS)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="wrap">
+    <canvas id="cv" width="960" height="600" aria-label="Lienzo de render"></canvas>
+    <div class="side">
+      <h1>Perspectiva & Rasterizador (JS)</h1>
+      <!-- Controles de Perspectiva -->
+      <div>
+        <div id="perspectiveControls">
+          <label for="fov">FOV: <span id="fovValue">60°</span></label>
+          <input id="fov" type="range" min="20" max="110" value="60" />
+        </div>
+
+        <div id="orthographicControls" style="display: none;">
+          <label for="orthoLeft">Left: <span id="orthoLeftValue">2.0</span></label>
+          <input id="orthoLeft" type="range" min="0.5" max="5.0" step="0.1" value="2.0" />
+
+          <label for="orthoBottom">Bottom: <span id="orthoBottomValue">2.0</span></label>
+          <input id="orthoBottom" type="range" min="0.5" max="5.0" step="0.1" value="2.0" />
+        </div>
+
+        <label for="near">near: <span id="nearValue">-0.10</span></label>
+        <input id="near" type="range" min="-500" max="-1" value="-10" />
+
+        <label for="far">far: <span id="farValue">-10.00</span></label>
+        <input id="far" type="range" min="-4000" max="-100" value="-1000" />
+
+        <label for="azimuth">Azimuth: <span id="azimuthValue">25°</span></label>
+        <input id="azimuth" type="range" min="-180" max="180" value="25" />
+
+        <label for="elevation">Elevación: <span id="elevationValue">15°</span></label>
+        <input id="elevation" type="range" min="-45" max="45" value="15" />
+      </div>
+
+      <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
+        <button id="fillBtn" type="button" title="Relleno con z-buffer">Relleno</button>
+        <button id="depthBtn" type="button" title="Visualización de profundidad">Depth</button>
+      </div>
+
+      <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
+        <button id="perspectiveBtn" type="button" title="Proyección en perspectiva">Perspectiva</button>
+        <button id="orthographicBtn" type="button" title="Proyección ortográfica">Ortográfica</button>
+      </div>
+
+      <!-- Controles de Configuración -->
+      <div class="note">
+        <b>Resumen:</b> La cámara (<code>lookAt</code>) y las proyecciones
+        (<code>perspective</code>/<code>orthographic</code>) ya vienen dadas. Vos
+        implementás el rasterizador <code>drawTriangle</code>: relleno de
+        triángulos con <b>coordenadas baricéntricas</b> + <b>z-buffer</b>. El
+        <em>back-face culling</em> asume orientación CCW en pantalla.
+      </div>
+    </div>
+  </div>
+  <!-- Cargar scripts -->
+  <script src="ejercicio4.js"></script>
+  <script src="tp4.js"></script>
+  <script src="zbuffer-view.js"></script>
+</body>
+</html>
