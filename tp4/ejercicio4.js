@@ -269,7 +269,41 @@ Parámetros:
   - v0,v1,v2 : vértices [x, y, z] en pantalla.
   - rgb      : color [r, g, b].
 */
-function drawTriangle(img, depth, v0, v1, v2, rgb){
+function drawTriangle(img, depth, v0, v1, v2, rgb){ 
   const w = img.w, h = img.h;
 
+  // 1. Bounding box, recortado a los límites de la imagen
+  const minX = Math.max(0, Math.floor(Math.min(v0[0], v1[0], v2[0])));
+  const maxX = Math.min(w - 1, Math.ceil(Math.max(v0[0], v1[0], v2[0])));
+  const minY = Math.max(0, Math.floor(Math.min(v0[1], v1[1], v2[1])));
+  const maxY = Math.min(h - 1, Math.ceil(Math.max(v0[1], v1[1], v2[1])));
+
+  // 2. Área con signo del triángulo completo
+  const area = edge(v0, v1, v2);
+  if (area === 0) return; 
+
+  // 3. y 4. Recorrer el bounding box, testear cada píxel y pintar con z-buffer
+  for (let y = minY; y <= maxY; y++){
+    for (let x = minX; x <= maxX; x++){
+      const p = [x + 0.5, y + 0.5];
+
+      const w0 = edge(v1, v2, p) / area;
+      const w1 = edge(v2, v0, p) / area;
+      const w2 = edge(v0, v1, p) / area;
+
+      if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+
+      const z = w0*v0[2] + w1*v1[2] + w2*v2[2];
+      const idx = y * w + x;
+
+      if (z > depth[idx]){
+        depth[idx] = z;
+        const pixel = idx * 4;
+        img.data[pixel] = rgb[0];
+        img.data[pixel + 1] = rgb[1];
+        img.data[pixel + 2] = rgb[2];
+        img.data[pixel + 3] = 255;
+      }
+    }
+  }
 }
