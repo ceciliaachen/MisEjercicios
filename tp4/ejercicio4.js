@@ -272,6 +272,7 @@ Parámetros:
 function drawTriangle(img, depth, v0, v1, v2, rgb){ 
   const w = img.w, h = img.h;
 
+<<<<<<< HEAD
   // 1. Bounding box, recortado a los límites de la imagen
   const minX = Math.max(0, Math.floor(Math.min(v0[0], v1[0], v2[0])));
   const maxX = Math.min(w - 1, Math.ceil(Math.max(v0[0], v1[0], v2[0])));
@@ -306,4 +307,43 @@ function drawTriangle(img, depth, v0, v1, v2, rgb){
       }
     }
   }
+=======
+  // Bounding box del triangulo
+  const minX = Math.max(0, Math.floor(Math.min(v0[0],v1[0],v2[0])))
+  const maxX = Math.min(w-1, Math.floor(Math.max(v0[0],v1[0],v2[0])))
+  const minY = Math.max(0, Math.floor(Math.min(v0[1],v1[1],v2[1])))
+  const maxY = Math.min(w-1, Math.floor(Math.max(v0[1],v1[1],v2[1])))
+
+  // area 
+  const area = edge(v0,v1,v2)
+
+  for(let y = minY; y <= maxY; y++) {
+    for(let x = minX; x <= maxX; x++) {
+      const p = [x + 0.5,y + 0.5];
+
+      // Calcular coordenadas baricentricas
+      const a = edge(v1,v2,p) / area
+      const b = edge(v2,v0,p) / area
+      const g = edge(v0,v1,p) / area
+
+      // Si el pixel esta dentro del triangulo
+      if (a < 0 || b < 0 || g < 0) continue;
+      if (a > 1 || b > 1 || g > 1) continue;
+
+      const z = a*v0[2] + b*v1[2] + g*v2[2];
+
+      const pix_index = y * w + x; 
+      if (z  > depth[pix_index]) {
+        depth[pix_index] = z;
+
+        img.data[pix_index*4 + 0] = 255;
+        img.data[pix_index*4 + 1] = 0;
+        img.data[pix_index*4 + 2] = 0;
+        img.data[pix_index*4 + 3] = 255;
+      }
+
+    }  
+  }
+
+>>>>>>> e133350a6ed081e34ff2117fc44857a14480a76a
 }
