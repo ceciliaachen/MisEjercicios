@@ -1,14 +1,29 @@
 // Código fuente de los shaders
 const vertexShaderSource = `
-	// TODO <-----------
+	atribute vec3 pos;
+	atribute vec4 clr;
+
+	uniform mat4 trans;
+	
+	varying vec4 vcolor;
+
 	void main()
 	{
-		// TODO <-----------
+		gl_Positions = trans * vec4(pos, 1.0);
+		vcolor = clr;
 	}
 `;
 
 const fragmentShaderSource = `
-	// TODO <-----------
+	precision mediump float;
+
+	varyiing vec4 vcolor;
+
+	void main()
+	{
+		gl_FragColor = vcolor;
+	}
+`;
 	void main()
 	{
 		// TODO <-----------
@@ -23,11 +38,14 @@ window.onload = function()
 	gl     = canvas.getContext("webgl");
 
 	// Seteamos la resolución del viewport y lo ajustamos a la del canvas
-	// TODO <-----------
+	const pixelRatio = window.devicePixelRatio || 1; 
+	canvas.width  = canvas.clientWidth * pixelRatio;
+	canvas.height = canvas.clientHeight * pixelRatio;
+	gl.viewport(0, 0, canvas.width, canvas.height);
 
 
 	// Inicializamos el color base (RGBA)
-	// TODO <-----------
+	gl.clearColor(1,1,1,1);
 	
 
 	/******* 2.0 INICIALIZACIÓN DE LA ESCENA *******/
@@ -48,12 +66,31 @@ window.onload = function()
 		0, 0, 1, 1];
 	
 	// Creación y binding de los buffers:
-	// Buffer para los vértices
-	// TODO <-----------
+	// Buffer para los vértices -> pedir memoria a la GPU y copiar los datos de posiciones
+	var position_buffer = gl.createBuffer();
+	gl.bindBuffer(
+		gl.ARRAY_BUFFER, 
+		position_buffer
+	);
+	gl.bufferData(
+		gl.ARRAY_BUFFER, 
+		new Float32Array(positions), 
+		gl.STATIC_DRAW
+	); // es un flag que me diga cuánto voy a modificar 
 
 
 	// Buffer para los colores
-	// TODO <-----------
+	var color_buffer = gl.createBuffer();
+	gl.bindBuffer(
+		gl.ARRAY_BUFFER, 
+		color_buffer
+	);
+	gl.bufferData(
+		gl.ARRAY_BUFFER, 
+		new Float32Array(colors), 
+		gl.STATIC_DRAW
+	); 
+
 
 	
     /******* 3.0 COMPILAMOS LOS SHADERS *******/
