@@ -68,7 +68,10 @@ cómo leerlo. Completá los 4 pasos (igual que en el ejemplo de WebGL).
   size    : cuántos números por vértice (3 para xyz, 3 para rgb)
 */
 function linkAttribute(gl, program, name, buffer, size) {
-    // TODO <-----------
+    var location = gl.getAttribLocation(program, name);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(location);
 }
 
 // ======================= PROVISTA — Estado global de la app ======================= //
@@ -94,12 +97,27 @@ let rotY = 0;
 */
 // Vertex shader: proyecta cada vértice con la matriz 'camera' y pasa el color.
 const vshader = `
-    // TODO <-----------
+    attribute vec3 position;
+    attribute vec4 color;
+    uniform mat4 camera;
+    varying vec4 vcolor;
+
+    void main()
+    {
+        gl_Position = camera * vec4(position, 1);
+        vcolor = color;
+    }
     `;
 
 // Fragment shader: pinta con el color interpolado.
 const fshader = `
-    // TODO <-----------
+    precision mediump float;
+    varying vec4 vcolor;
+
+    void main()
+    {
+        gl_FragColor = vcolor;
+    }
     `;
 
 // ===================== TODO — Compilar y linkear shaders ==================== //
@@ -113,12 +131,34 @@ const fshader = `
 */
 // Compila un shader (vertex o fragment) a partir de su código fuente.
 function CompileShader(gl, type, source) {
-    // TODO <-----------
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert( gl.getShaderInfoLog(shader) );
+        gl.deleteShader(shader);
+    }
+
+    return shader;
 }
 
 // Compila y linkea el vertex y el fragment shader en un único programa.
 function InitShaderProgram(gl, vsSource, fsSource) {
-    // TODO <-----------
+    vs = CompileShader(gl, gl.VERTEX_SHADER, vsSource);
+    fs = CompileShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+    prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+
+    // Verifico si el link fue exitoso
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        alert( gl.getProgramInfoLog(prog) );
+    }
+
+    return prog;
 }
 
 // ============================= TODO — Buffers ============================= //
@@ -128,7 +168,11 @@ function InitShaderProgram(gl, vsSource, fsSource) {
 */
 // Crea un buffer en la GPU y lo llena con los datos (Float32Array).
 function createBuffer(gl, data) {
-    // TODO <-----------
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+
+    return buffer;
 }
 
 // ============================== TODO — Dibujar ============================== //
@@ -141,7 +185,11 @@ function createBuffer(gl, data) {
 // Dibuja la escena: arma la matriz de cámara con los parámetros actuales
 // (rotX, rotY, transZ), limpia la pantalla y dibuja los triángulos del cubo.
 function DrawScene() {
-    // TODO <-----------
+    var projectionMatrix = UpdateProjectionMatrix(canvas, rotX, rotY, transZ);
+    gl.uniformMatrix4fv(uCam, false, new Float32Array(projectionMatrix));
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
 }
 
 // ======================== PROVISTA — Controles de cámara ======================== //
@@ -206,23 +254,26 @@ window.onload = async function() {
 
     // 3) TODO: compilar y activar los shaders. Necesitás InitShaderProgram
     //    y después activarlos con gl.useProgram.
-    // TODO <-----------
-
+    prog = InitShaderProgram(gl, vshader, fshader);
+    gl.useProgram(prog);
 
     // 4) TODO: subir la geometría a la GPU y conectarla con los atributos del
     //    shader. Necesitás createBuffer (uno para posiciones y otro para colores)
     //    y linkAttribute para cada atributo ('position' y 'color').
-    // TODO <-----------
-
+    var position_buffer = createBuffer(gl, model.positions);
+    var color_buffer = createBuffer(gl, model.colors);
+    linkAttribute(gl, prog, 'position', position_buffer, 3); // xyz
+    linkAttribute(gl, prog, 'color', color_buffer, 3); // RGBA
 
     // 5) TODO: configurar el estado de render (gl.clearColor y gl.enable(DEPTH_TEST))
     //    y guardar la ubicación del uniform 'camera' con gl.getUniformLocation.
-    // TODO <-----------
-    
+    gl.clearColor(0, 0, 0, 1);
+    gl.enable(gl.DEPTH_TEST);
+    uCam = gl.getUniformLocation(prog, 'camera');
 
     // 6) Conectar el mouse y dibujar la primera imagen.
-    // TODO <-----------
-
+    setupMouseControls(canvas);
+    DrawScene();
 
     // 7) Redibujar cuando cambia el tamaño de la ventana.
     window.addEventListener('resize', function() {

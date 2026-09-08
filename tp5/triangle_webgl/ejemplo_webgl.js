@@ -42,7 +42,6 @@ window.onload = function()
 	// Inicializamos el color base (RGBA)
 	gl.clearColor(1,1,1,1);
 	
-
 	/******* 2.0 INICIALIZACIÓN DE LA ESCENA *******/
 	// Inicialización de los buffers para los objetos de mi escena.
 	// Este contenido podríamos modificarnlo en cualquier momento
