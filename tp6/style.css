@@ -1,0 +1,142 @@
+:root {
+	--bg: #f4f6f9;
+	--grid: #e2e7ee;
+	--curve: #2b6cff;
+	--anchor: #1a1a1a;
+	--handle: #ff8c1a;
+	--accent: #2b6cff;
+	--panel-bg: rgba(255, 255, 255, 0.96);
+	--ink: #1f2430;
+	--muted: #6b7280;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+	font-family: "Segoe UI", system-ui, Arial, sans-serif;
+	color: var(--ink);
+}
+
+/* Grilla de fondo, se ve a través del canvas (transparente) y del SVG */
+body {
+	background-color: var(--bg);
+	background-image:
+		linear-gradient(var(--grid) 1px, transparent 1px),
+		linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+	background-size: 32px 32px;
+}
+
+#canvas, #overlay {
+	display: block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+#canvas  { z-index: 0; }
+#overlay { z-index: 1; }
+
+/* --------- Elementos didácticos del overlay --------- */
+
+/* Polígono de control (líneas ancla → manija) */
+.polyline {
+	stroke: var(--handle);
+	stroke-width: 1.5px;
+	stroke-dasharray: 4, 4;
+	fill: none;
+	pointer-events: none;
+	opacity: 0.9;
+}
+
+/* de Casteljau: niveles intermedios de interpolación */
+.casteljau-l1 { stroke: #12b886; stroke-width: 1.5px; fill: none; pointer-events: none; }
+.casteljau-l2 { stroke: #7048e8; stroke-width: 1.5px; fill: none; pointer-events: none; }
+.casteljau-dot-l1 { fill: #12b886; pointer-events: none; }
+.casteljau-dot-l2 { fill: #7048e8; pointer-events: none; }
+.casteljau-point  { fill: #e03131; stroke: white; stroke-width: 2px; pointer-events: none; }
+
+/* Vector tangente y círculo osculador */
+.tangent { stroke: #e03131; stroke-width: 3px; pointer-events: none; }
+.osculating-circle { stroke: #868e96; stroke-width: 1.5px; stroke-dasharray: 6, 6; fill: none; pointer-events: none; }
+.osculating-radius { stroke: #868e96; stroke-width: 1px; pointer-events: none; }
+
+/* Puntos interactivos */
+.anchor {
+	fill: var(--anchor);
+	stroke: white;
+	stroke-width: 2px;
+	cursor: grab;
+}
+.anchor.selected { fill: var(--accent); }
+.handle {
+	fill: white;
+	stroke: var(--handle);
+	stroke-width: 2px;
+	cursor: grab;
+}
+.pt-label { font-size: 12px; fill: var(--muted); text-anchor: middle; pointer-events: none; }
+
+/* --------- Panel de control --------- */
+#panel {
+	position: fixed;
+	top: 16px;
+	right: 16px;
+	width: 280px;
+	z-index: 10;
+	background: var(--panel-bg);
+	backdrop-filter: blur(4px);
+	border: 1px solid #dfe3ea;
+	border-radius: 12px;
+	box-shadow: 0 8px 30px rgba(20, 30, 60, 0.12);
+	padding: 16px 18px;
+}
+#panel h1 {
+	margin: 0 0 6px;
+	font-size: 16px;
+	letter-spacing: 0.2px;
+}
+#panel .hint {
+	margin: 0 0 14px;
+	font-size: 12px;
+	line-height: 1.4;
+	color: var(--muted);
+}
+#panel .row {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 13px;
+	margin-bottom: 14px;
+}
+#panel select, #panel input[type="range"] {
+	width: 100%;
+}
+#panel fieldset {
+	border: 1px solid #e5e8ee;
+	border-radius: 8px;
+	margin: 0 0 14px;
+	padding: 10px 12px;
+}
+#panel legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
+#panel fieldset label {
+	display: block;
+	font-size: 13px;
+	margin: 6px 0;
+	cursor: pointer;
+}
+#panel .slider b { color: var(--accent); }
+#panel button {
+	width: 100%;
+	padding: 9px 12px;
+	border: none;
+	border-radius: 8px;
+	background: #eef1f6;
+	color: var(--ink);
+	font-size: 13px;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+#panel button:hover { background: #e2e7f0; }
