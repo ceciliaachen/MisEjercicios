@@ -70,7 +70,57 @@ El framework, en cada cambio, llama a `redraw()` que:
 2. redibuja el overlay SVG usando `deCasteljau`, `bezierTangent` y
    `bezierCurvature`.
 
-## 4. Continuidad: por qué se "espejan" las manijas
+## 4. Curvatura: de `k = 1/r` a la fórmula que usa el código
+
+En la clase *6.0 Curvas* la curvatura aparece sólo con su **definición
+geométrica**: el círculo osculador es el círculo que mejor "abraza" la curva en un
+punto (comparte posición, tangente y curvatura), y su radio `r` se relaciona con la
+curvatura por
+
+```text
+k = 1 / r      (curva cerrada → r chico → k grande ; tramo recto → r → ∞ → k → 0)
+```
+
+El problema es que esa igualdad **no dice cómo calcular `r`** a partir de la
+Bézier: no tenemos el círculo, tenemos `f(t)`. Para eso usamos la forma
+**paramétrica** de la curvatura (que no está en las diapos, es el paso que agrega
+este TP):
+
+```text
+         f'(t) × f''(t)              con  f'×f'' = x'·y'' − y'·x''  (cruz 2D, escalar)
+k(t) = ------------------           y    |f'| = rapidez (módulo de la tangente)
+            |f'(t)|³
+```
+
+y de ahí el radio sale otra vez como `r = 1 / |k|`. Las dos expresiones son **lo
+mismo**: `k = 1/r` es la definición; la fórmula con `f' × f''` es su versión
+computable para una curva `f(t)` cualquiera. ¿De dónde sale cada pieza?
+
+- **`f''(t)`** (segunda derivada): mide cómo *gira* la tangente. El código la
+  calcula aparte en `bezierSecondDerivative`. Tampoco está en las diapos (ahí sólo
+  se deriva una vez, `f'(t)`).
+- **`f' × f''`** (producto cruz en 2D): da un escalar **con signo**. Su valor
+  absoluto mide cuánto se curva; su signo dice **hacia qué lado** (izquierda /
+  derecha), y lo usamos para orientar la normal hacia el centro del círculo.
+- **`|f'|³`** (rapidez al cubo): es un "corrector". La fórmula `k = |f''|` sólo
+  vale si la curva está parametrizada por **longitud de arco** (velocidad
+  constante 1). Una Bézier en `t ∈ [0,1]` no lo está: recorre la curva más rápido
+  o más lento según `t`. Dividir por `|f'|³` cancela esa dependencia de la
+  velocidad y deja una curvatura que sólo depende de la **forma**.
+
+Con `k` y `r` ya tenemos el *tamaño* del círculo, pero falta su **centro**. El
+centro está sobre la **normal** (la tangente girada 90°), a distancia `r` del
+punto, del lado hacia donde la curva gira (el signo de `f' × f''`):
+
+```text
+centro = f(t) + r · n̂        con  n̂ = normal unitaria orientada según el giro
+```
+
+Eso es exactamente lo que arma `bezierCurvature`: calcula `f'` y `f''`, obtiene
+`k` y `r`, y coloca el centro sobre la normal. Si la curva es localmente recta
+(`f' × f'' ≈ 0`) devuelve `r = Infinity` y no dibuja círculo.
+
+## 5. Continuidad: por qué se "espejan" las manijas
 
 Un ancla es un punto **compartido por dos segmentos**: es el `p3` del segmento que
 termina ahí y el `p0` del que arranca. Sus dos manijas también juegan doble rol:
@@ -120,7 +170,7 @@ No se llama al **crear** un ancla (ahí las manijas arrancan simétricas por
 construcción) ni al **mover el cuerpo** del ancla (eso traslada las dos manijas
 juntas, sin cambiar su relación).
 
-## 5. Qué implementás vos (orden sugerido)
+## 6. Qué implementás vos (orden sugerido)
 
 Todo va en [`ejercicio.js`](ejercicio.js). Conviene hacerlo en este orden, porque
 cada paso se apoya en el anterior y se puede verificar visualmente:
