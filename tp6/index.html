@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<title>CG 2026 - TP6 - Editor de curvas de Bézier</title>
+	<link href="style.css" rel="stylesheet">
+
+	<!-- Framework (ya resuelto): pipeline WebGL e interacción -->
+	<script type="text/javascript" src="render.js"></script>
+	<script type="text/javascript" src="editor.js"></script>
+
+	<!-- Archivo del alumno: acá van los [TODO] del mundo curvas -->
+	<script type="text/javascript" src="ejercicio.js"></script>
+</head>
+<body>
+	<!-- La curva suave se dibuja con WebGL -->
+	<canvas id="canvas"></canvas>
+
+	<!-- Todo lo interactivo y didáctico se dibuja como overlay SVG -->
+	<svg id="overlay">
+		<g id="g-polygon"></g>      <!-- polígono de control (handles) -->
+		<g id="g-casteljau"></g>    <!-- construcción de de Casteljau -->
+		<g id="g-tangent"></g>      <!-- vector tangente f'(t) -->
+		<g id="g-osculating"></g>   <!-- círculo osculador (curvatura) -->
+		<g id="g-handles"></g>      <!-- puntos: handles -->
+		<g id="g-anchors"></g>      <!-- puntos: anclas -->
+	</svg>
+
+	<!-- Panel de control -->
+	<div id="panel">
+		<h1>Curvas de Bézier</h1>
+		<p class="hint">Click en el lienzo para agregar un ancla. Arrastrá anclas y
+		manijas. Click derecho sobre un ancla para borrarla.</p>
+
+		<label class="row">
+			<span>Continuidad al mover manijas</span>
+			<select id="continuity">
+				<option value="none">C⁰ (independiente)</option>
+				<option value="C1" selected>C¹ (simétrica)</option>
+				<option value="G1">G¹ (misma dirección)</option>
+			</select>
+		</label>
+
+		<fieldset>
+			<legend>Visualizaciones sobre el segmento activo</legend>
+			<label><input type="checkbox" id="showPolygon" checked> Polígono de control</label>
+			<label><input type="checkbox" id="showCasteljau"> Construcción de de Casteljau</label>
+			<label><input type="checkbox" id="showTangent"> Vector tangente f′(t)</label>
+			<label><input type="checkbox" id="showOsculating"> Círculo osculador (curvatura)</label>
+		</fieldset>
+
+		<label class="row slider">
+			<span>Parámetro t = <b id="tval">0.50</b></span>
+			<input type="range" id="tparam" min="0" max="1" step="0.01" value="0.5">
+		</label>
+
+		<button id="clear">Limpiar todo</button>
+	</div>
+</body>
+</html>
