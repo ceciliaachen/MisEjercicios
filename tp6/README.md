@@ -70,55 +70,149 @@ El framework, en cada cambio, llama a `redraw()` que:
 2. redibuja el overlay SVG usando `deCasteljau`, `bezierTangent` y
    `bezierCurvature`.
 
-## 4. Curvatura: de `k = 1/r` a la fórmula que usa el código
+## 4. Curvatura: del círculo osculador a la fórmula que usa el código
 
-En la clase *6.0 Curvas* la curvatura aparece sólo con su **definición
-geométrica**: el círculo osculador es el círculo que mejor "abraza" la curva en un
-punto (comparte posición, tangente y curvatura), y su radio `r` se relaciona con la
-curvatura por
+En la clase *6.0 Curvas* vimos la interpretación geométrica de la curvatura: cerca
+de un punto, una curva puede aproximarse por un **círculo osculador**, es decir,
+el círculo que mejor reproduce cómo se está doblando la curva en ese lugar.
 
-```text
-k = 1 / r      (curva cerrada → r chico → k grande ; tramo recto → r → ∞ → k → 0)
-```
-
-El problema es que esa igualdad **no dice cómo calcular `r`** a partir de la
-Bézier: no tenemos el círculo, tenemos `f(t)`. Para eso usamos la forma
-**paramétrica** de la curvatura (que no está en las diapos, es el paso que agrega
-este TP):
+Su radio `r` nos dice cuánto se curva:
 
 ```text
-         f'(t) × f''(t)              con  f'×f'' = x'·y'' − y'·x''  (cruz 2D, escalar)
-k(t) = ------------------           y    |f'| = rapidez (módulo de la tangente)
-            |f'(t)|³
+k = 1 / r
 ```
 
-y de ahí el radio sale otra vez como `r = 1 / |k|`. Las dos expresiones son **lo
-mismo**: `k = 1/r` es la definición; la fórmula con `f' × f''` es su versión
-computable para una curva `f(t)` cualquiera. ¿De dónde sale cada pieza?
+Un círculo chico implica una curva muy cerrada (`k` grande). Una recta puede
+pensarse como un círculo de radio infinito, por lo que su curvatura es `0`.
 
-- **`f''(t)`** (segunda derivada): mide cómo *gira* la tangente. El código la
-  calcula aparte en `bezierSecondDerivative`. Tampoco está en las diapos (ahí sólo
-  se deriva una vez, `f'(t)`).
-- **`f' × f''`** (producto cruz en 2D): da un escalar **con signo**. Su valor
-  absoluto mide cuánto se curva; su signo dice **hacia qué lado** (izquierda /
-  derecha), y lo usamos para orientar la normal hacia el centro del círculo.
-- **`|f'|³`** (rapidez al cubo): es un "corrector". La fórmula `k = |f''|` sólo
-  vale si la curva está parametrizada por **longitud de arco** (velocidad
-  constante 1). Una Bézier en `t ∈ [0,1]` no lo está: recorre la curva más rápido
-  o más lento según `t`. Dividir por `|f'|³` cancela esa dependencia de la
-  velocidad y deja una curvatura que sólo depende de la **forma**.
-
-Con `k` y `r` ya tenemos el *tamaño* del círculo, pero falta su **centro**. El
-centro está sobre la **normal** (la tangente girada 90°), a distancia `r` del
-punto, del lado hacia donde la curva gira (el signo de `f' × f''`):
+El problema es que en una Bézier nosotros no conocemos ese círculo. Lo que
+tenemos es una función
 
 ```text
-centro = f(t) + r · n̂        con  n̂ = normal unitaria orientada según el giro
+f(t) = (x(t), y(t))
 ```
 
-Eso es exactamente lo que arma `bezierCurvature`: calcula `f'` y `f''`, obtiene
-`k` y `r`, y coloca el centro sobre la normal. Si la curva es localmente recta
-(`f' × f'' ≈ 0`) devuelve `r = Infinity` y no dibuja círculo.
+y queremos obtener el círculo a partir de ella.
+
+### ¿Qué nos dicen las derivadas?
+
+Una forma útil de pensar `t` es imaginar que un punto se mueve sobre la curva.
+
+La primera derivada
+
+```text
+f'(t)
+```
+
+es su **vector velocidad**: apunta en la dirección tangente a la curva. Su módulo
+`|f'(t)|` indica qué tan rápido estamos recorriendo la curva.
+
+La segunda derivada
+
+```text
+f''(t)
+```
+
+es el cambio de esa velocidad, es decir, una **aceleración**.
+
+Pero la velocidad puede cambiar de dos maneras. Una parte de la aceleración puede
+estar en la dirección de la tangente: eso sólo significa que recorremos la curva
+más rápido o más lento. La otra parte apunta hacia un costado de la trayectoria:
+**esa es la parte que hace que la curva doble**.
+
+Queremos quedarnos sólo con esta segunda componente.
+
+### El producto cruz selecciona el giro
+
+En 2D usamos
+
+```text
+f'(t) × f''(t) = x'(t)y''(t) - y'(t)x''(t)
+```
+
+Este producto vale `0` si `f''` es paralelo a `f'`. Eso tiene sentido: si la
+aceleración sólo apunta hacia adelante o hacia atrás, cambia la rapidez pero la
+trayectoria no dobla.
+
+En cambio, cuanto mayor sea la componente de `f''` perpendicular a `f'`, mayor
+será `|f' × f''|`. Además, el signo nos dice hacia qué lado gira la curva.
+
+### ¿Por qué aparece `|f'|³`?
+
+Todavía queda un problema: la curvatura no debería depender de qué tan rápido
+recorremos la curva. Dos parametrizaciones distintas pueden describir exactamente
+la misma forma geométrica pero recorrerla a velocidades diferentes.
+
+Si llamamos
+
+```text
+v = |f'(t)|
+```
+
+a la rapidez, la componente de la aceleración que apunta hacia el centro del
+círculo osculador satisface
+
+```text
+a_normal = v² · k
+```
+
+Por otro lado, el producto cruz entre velocidad y aceleración mide justamente esa
+componente perpendicular, multiplicada por `v`:
+
+```text
+|f' × f''| = |f'| · a_normal
+            = v · (v² · k)
+            = v³ · k
+```
+
+Por lo tanto,
+
+```text
+         f'(t) × f''(t)
+k(t) = -----------------
+             |f'(t)|³
+```
+
+Ahora se ve de dónde sale la fórmula: el numerador mide cuánto de la aceleración
+está haciendo **doblar** la trayectoria, y el denominador elimina el efecto de la
+velocidad con la que recorremos la curva.
+
+Si sólo nos interesa el tamaño de la curvatura usamos `|k|`. El radio del círculo
+osculador es entonces
+
+```text
+r = 1 / |k|
+```
+
+### ¿Dónde está el centro del círculo?
+
+El círculo osculador debe tener la misma tangente que la curva. Por eso su centro
+tiene que estar sobre la **normal**, es decir, la dirección perpendicular a la
+tangente.
+
+Tomamos la tangente `f'(t)`, la giramos 90°, la normalizamos y elegimos el lado
+indicado por el signo de `f' × f''`.
+
+Entonces:
+
+```text
+centro = f(t) + r · n̂
+```
+
+donde `n̂` es la normal unitaria orientada hacia el lado al que está doblando la
+curva.
+
+Eso es lo que implementa `bezierCurvature`: calcula `f'(t)` y `f''(t)`, obtiene la
+curvatura, calcula `r = 1 / |k|` y coloca el centro del círculo sobre la normal.
+
+Si
+
+```text
+f'(t) × f''(t) ≈ 0
+```
+
+la curva es localmente recta: `k ≈ 0`, `r → ∞` y no hay un círculo osculador
+finito que dibujar.
 
 ## 5. Continuidad: por qué se "espejan" las manijas
 
