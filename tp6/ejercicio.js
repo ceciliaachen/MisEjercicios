@@ -109,8 +109,12 @@ var bezierVS = `
 		// [TODO] Evaluá la Bézier cúbica con la base de Bernstein.
 		//        Recordá: las constantes flotantes se escriben como 3.0, 1.0, etc.
 
-
-		gl_Position = ...;
+		float u = 1.0 - t;
+		vec2 f = u*u*u*p0 
+				+ 3.0*u*u*t*p1 
+				+ 3.0*u*t*t*p2 
+				+ t*t*t*p3;
+		gl_Position = mvp * vec4(f, 0.0, 1.0);
 	}
 `;
 
@@ -150,9 +154,18 @@ function deCasteljau(p0, p1, p2, p3, t) {
 	//   nivel 1: a = lerp(p0,p1), b = lerp(p1,p2), c = lerp(p2,p3)
 	//   nivel 2: d = lerp(a,b),   e = lerp(b,c)
 	//   punto  : f = lerp(d,e)  == f(t)
-	
-}
 
+	const a = lerp(p0, p1, t);
+	const b = lerp(p1, p2, t);
+	const c = lerp(p2, p3, t);
+
+	const d = lerp(a, b, t);
+	const e = lerp(b, c, t);
+
+	const point = lerp(d, e, t);
+
+	return { point: point, l1: [a, b, c], l2: [d, e] };
+}
 
 // ----------------------------------------------------------------------------
 // 3) Vector tangente: derivada f'(t).
@@ -162,12 +175,22 @@ function deCasteljau(p0, p1, p2, p3, t) {
 // Sale:   {x,y} : el vector derivada f'(t) (NO normalizado; su largo importa)
 function bezierTangent(p0, p1, p2, p3, t) {
 	// [TODO] Implementá f'(t) = 3(1-t)^2 (p1-p0) + 6(1-t)t (p2-p1) + 3 t^2 (p3-p2)
-	// ... 
+	const u = 1 - t;
+
+	// Coeficiente que multiplica a cada término
+	const c0 = 3 * u * u;
+	const c1 = 6 * u * t;
+	const c2 = 3 * t * t;
+
+	// Diferencias entre puntos de control
+	const dif01 = { x: p1.x - p0.x, y: p1.y - p0.y };
+	const dif12 = { x: p2.x - p1.x, y: p2.y - p1.y };
+	const dif23 = { x: p3.x - p2.x, y: p3.y - p2.y };
 
 	// f'(t) = c0 * dif01 + c1 * dif12 + c2 * dif23
 	return {
-		x: //...,
-		y: //...
+		x: c0 * dif01.x + c1 * dif12.x + c2 * dif23.x,
+		y: c0 * dif01.y + c1 * dif12.y + c2 * dif23.y
 	};
 }
 
@@ -199,7 +222,28 @@ function bezierCurvature(p0, p1, p2, p3, t) {
 	//   3) curvatura k = giro / rapidez^3   y   radio = 1 / |k|
 	//   4) el centro está a 'radio' del punto, en la dirección PERPENDICULAR a
 	//      f', del lado hacia donde la curva gira.
-    // ...
+	
+	// Paso 1: calcular f'(t) y f''(t)
+    const fp = bezierTangent(p0, p1, p2, p3, t);
+	const fpp = bezierSecondDerivative(p0, p1, p2, p3, t);
+
+	// Paso 2: rapidez y giro
+	const rapidez = norma(fp.x, fp.y);
+	const giro = fp.x * fpp.y - fp.y * fpp.x;
+
+	// Paso 3: curvatura y radio
+	const k = giro / (rapidez * rapidez * rapidez);
+	const radio = 1 / Math.abs(k);
+
+	// perpendicular a f' (normalizado), rotado 90° hacia donde gira la curva
+	const perp = { x: -fp.y / rapidez, y: fp.x / rapidez };
+	const signo = k > 0 ? 1 : -1;
+
+	const point = deCasteljau(p0, p1, p2, p3, t).point;
+	const center = {
+		x: point.x + signo * radio * perp.x,
+		y: point.y + signo * radio * perp.y
+	};
     
 	return { center: center, r: radio, k: k };
 }
@@ -258,20 +302,25 @@ function enforceContinuity(a, movedSide, mode) {
 		// [TODO] La opuesta es el espejo de 'movida' respecto del ancla.
 		//        Espejar un punto p respecto de A es:  2*A - p
 		nuevaOpuesta = {
-			x:  //... ,
-			y:  //...
+			x: 2 * ancla.x - movida.x,
+			y: 2 * ancla.y - movida.y
 		};
 	}
 
 	// ---- G1: misma dirección, se conserva el largo de la opuesta --------------
 	if (mode === 'G1') {
-		// [TODO]
-		// ...
+		const opuesta = (movedSide === 'out') ? { x: a.inx, y: a.iny } : { x: a.outx, y: a.outy };
+		const largoOpuesta = norma(opuesta.x - ancla.x, opuesta.y - ancla.y);
+
+		const dx = movida.x - ancla.x;
+		const dy = movida.y - ancla.y;
+		const largoMovida = norma(dx, dy);
+		const versor = { x: dx / largoMovida, y: dy / largoMovida };
 
 		// 3) la opuesta va para el LADO CONTRARIO (-versor) con su largo viejo
 		nuevaOpuesta = {
-			x: // ...,
-			y: // ...
+			x: ancla.x - versor.x * largoOpuesta,
+			y: ancla.y - versor.y * largoOpuesta
 		};
 	}
 
