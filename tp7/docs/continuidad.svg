@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="240" viewBox="0 0 760 240" font-family="Segoe UI, Arial, sans-serif">
+  <style>
+    .title   { font-size: 18px; font-weight: 700; fill: #1f2430; }
+    .sub      { font-size: 12px; fill: #6b7280; }
+    .lbl      { font-size: 12px; fill: #444; }
+    .len      { font-size: 12px; fill: #2b6cff; font-style: italic; }
+    .poly     { stroke: #ff8c1a; stroke-width: 2; stroke-dasharray: 5 4; fill: none; }
+    .anchor   { fill: #1a1a1a; stroke: #fff; stroke-width: 2; }
+    .handle   { fill: #fff; stroke: #ff8c1a; stroke-width: 2; }
+    .sep      { stroke: #e5e8ee; stroke-width: 1; }
+    .bad      { stroke: #e03131; stroke-width: 2; fill: none; }
+  </style>
+
+  <!-- separadores -->
+  <line class="sep" x1="253" y1="20" x2="253" y2="220"/>
+  <line class="sep" x1="507" y1="20" x2="507" y2="220"/>
+
+  <!-- ===================== C1 ===================== -->
+  <text class="title" x="127" y="34" text-anchor="middle">C¹</text>
+  <text class="sub"   x="127" y="52" text-anchor="middle">reflejo exacto (mismo largo)</text>
+
+  <!-- manijas colineales, distancias iguales -->
+  <line class="poly" x1="47" y1="130" x2="207" y2="130"/>
+  <circle class="handle" cx="47"  cy="130" r="6"/>
+  <circle class="anchor" cx="127" cy="130" r="7"/>
+  <circle class="handle" cx="207" cy="130" r="6"/>
+  <text class="lbl" x="47"  y="118" text-anchor="middle">in</text>
+  <text class="lbl" x="207" y="118" text-anchor="middle">out</text>
+  <text class="lbl" x="127" y="155" text-anchor="middle">A</text>
+  <text class="len" x="87"  y="145" text-anchor="middle">L</text>
+  <text class="len" x="167" y="145" text-anchor="middle">L</text>
+  <text class="sub" x="127" y="200" text-anchor="middle">tangente igual en dirección y magnitud</text>
+
+  <!-- ===================== G1 ===================== -->
+  <text class="title" x="380" y="34" text-anchor="middle">G¹</text>
+  <text class="sub"   x="380" y="52" text-anchor="middle">misma recta, distinto largo</text>
+
+  <line class="poly" x1="330" y1="130" x2="470" y2="130"/>
+  <circle class="handle" cx="330" cy="130" r="6"/>
+  <circle class="anchor" cx="370" cy="130" r="7"/>
+  <circle class="handle" cx="470" cy="130" r="6"/>
+  <text class="lbl" x="330" y="118" text-anchor="middle">in</text>
+  <text class="lbl" x="470" y="118" text-anchor="middle">out</text>
+  <text class="lbl" x="370" y="155" text-anchor="middle">A</text>
+  <text class="len" x="350" y="145" text-anchor="middle">L′</text>
+  <text class="len" x="420" y="145" text-anchor="middle">L</text>
+  <text class="sub" x="380" y="200" text-anchor="middle">misma dirección, magnitud distinta</text>
+
+  <!-- ===================== C0 ===================== -->
+  <text class="title" x="633" y="34" text-anchor="middle">C⁰</text>
+  <text class="sub"   x="633" y="52" text-anchor="middle">sin alinear → pico</text>
+
+  <!-- manijas NO colineales -->
+  <line class="poly" x1="583" y1="86"  x2="623" y2="130"/>
+  <line class="poly" x1="623" y1="130" x2="713" y2="140"/>
+  <circle class="handle" cx="583" cy="86"  r="6"/>
+  <circle class="anchor" cx="623" cy="130" r="7"/>
+  <circle class="handle" cx="713" cy="140" r="6"/>
+  <text class="lbl" x="583" y="76"  text-anchor="middle">in</text>
+  <text class="lbl" x="723" y="132" text-anchor="start">out</text>
+  <text class="lbl" x="612" y="150" text-anchor="middle">A</text>
+  <!-- marca del quiebre -->
+  <path class="bad" d="M 606 118 q 12 4 22 18"/>
+  <text class="sub" x="633" y="200" text-anchor="middle">las tangentes no coinciden</text>
+</svg>
