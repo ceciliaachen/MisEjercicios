@@ -70,7 +70,151 @@ El framework, en cada cambio, llama a `redraw()` que:
 2. redibuja el overlay SVG usando `deCasteljau`, `bezierTangent` y
    `bezierCurvature`.
 
-## 4. Continuidad: por qué se "espejan" las manijas
+## 4. Curvatura: del círculo osculador a la fórmula que usa el código
+
+En la clase *6.0 Curvas* vimos la interpretación geométrica de la curvatura: cerca
+de un punto, una curva puede aproximarse por un **círculo osculador**, es decir,
+el círculo que mejor reproduce cómo se está doblando la curva en ese lugar.
+
+Su radio `r` nos dice cuánto se curva:
+
+```text
+k = 1 / r
+```
+
+Un círculo chico implica una curva muy cerrada (`k` grande). Una recta puede
+pensarse como un círculo de radio infinito, por lo que su curvatura es `0`.
+
+El problema es que en una Bézier nosotros no conocemos ese círculo. Lo que
+tenemos es una función
+
+```text
+f(t) = (x(t), y(t))
+```
+
+y queremos obtener el círculo a partir de ella.
+
+### ¿Qué nos dicen las derivadas?
+
+Una forma útil de pensar `t` es imaginar que un punto se mueve sobre la curva.
+
+La primera derivada
+
+```text
+f'(t)
+```
+
+es su **vector velocidad**: apunta en la dirección tangente a la curva. Su módulo
+`|f'(t)|` indica qué tan rápido estamos recorriendo la curva.
+
+La segunda derivada
+
+```text
+f''(t)
+```
+
+es el cambio de esa velocidad, es decir, una **aceleración**.
+
+Pero la velocidad puede cambiar de dos maneras. Una parte de la aceleración puede
+estar en la dirección de la tangente: eso sólo significa que recorremos la curva
+más rápido o más lento. La otra parte apunta hacia un costado de la trayectoria:
+**esa es la parte que hace que la curva doble**.
+
+Queremos quedarnos sólo con esta segunda componente.
+
+### El producto cruz selecciona el giro
+
+En 2D usamos
+
+```text
+f'(t) × f''(t) = x'(t)y''(t) - y'(t)x''(t)
+```
+
+Este producto vale `0` si `f''` es paralelo a `f'`. Eso tiene sentido: si la
+aceleración sólo apunta hacia adelante o hacia atrás, cambia la rapidez pero la
+trayectoria no dobla.
+
+En cambio, cuanto mayor sea la componente de `f''` perpendicular a `f'`, mayor
+será `|f' × f''|`. Además, el signo nos dice hacia qué lado gira la curva.
+
+### ¿Por qué aparece `|f'|³`?
+
+Todavía queda un problema: la curvatura no debería depender de qué tan rápido
+recorremos la curva. Dos parametrizaciones distintas pueden describir exactamente
+la misma forma geométrica pero recorrerla a velocidades diferentes.
+
+Si llamamos
+
+```text
+v = |f'(t)|
+```
+
+a la rapidez, la componente de la aceleración que apunta hacia el centro del
+círculo osculador satisface
+
+```text
+a_normal = v² · k
+```
+
+Por otro lado, el producto cruz entre velocidad y aceleración mide justamente esa
+componente perpendicular, multiplicada por `v`:
+
+```text
+|f' × f''| = |f'| · a_normal
+            = v · (v² · k)
+            = v³ · k
+```
+
+Por lo tanto,
+
+```text
+         f'(t) × f''(t)
+k(t) = -----------------
+             |f'(t)|³
+```
+
+Ahora se ve de dónde sale la fórmula: el numerador mide cuánto de la aceleración
+está haciendo **doblar** la trayectoria, y el denominador elimina el efecto de la
+velocidad con la que recorremos la curva.
+
+Si sólo nos interesa el tamaño de la curvatura usamos `|k|`. El radio del círculo
+osculador es entonces
+
+```text
+r = 1 / |k|
+```
+
+### ¿Dónde está el centro del círculo?
+
+El círculo osculador debe tener la misma tangente que la curva. Por eso su centro
+tiene que estar sobre la **normal**, es decir, la dirección perpendicular a la
+tangente.
+
+Tomamos la tangente `f'(t)`, la giramos 90°, la normalizamos y elegimos el lado
+indicado por el signo de `f' × f''`.
+
+Entonces:
+
+```text
+centro = f(t) + r · n̂
+```
+
+donde `n̂` es la normal unitaria orientada hacia el lado al que está doblando la
+curva.
+
+Eso es lo que implementa `bezierCurvature`: calcula `f'(t)` y `f''(t)`, obtiene la
+curvatura, calcula `r = 1 / |k|` y coloca el centro del círculo sobre la normal.
+
+Si
+
+```text
+f'(t) × f''(t) ≈ 0
+```
+
+la curva es localmente recta: `k ≈ 0`, `r → ∞` y no hay un círculo osculador
+finito que dibujar.
+
+## 5. Continuidad: por qué se "espejan" las manijas
 
 Un ancla es un punto **compartido por dos segmentos**: es el `p3` del segmento que
 termina ahí y el `p0` del que arranca. Sus dos manijas también juegan doble rol:
@@ -120,7 +264,7 @@ No se llama al **crear** un ancla (ahí las manijas arrancan simétricas por
 construcción) ni al **mover el cuerpo** del ancla (eso traslada las dos manijas
 juntas, sin cambiar su relación).
 
-## 5. Qué implementás vos (orden sugerido)
+## 6. Qué implementás vos (orden sugerido)
 
 Todo va en [`ejercicio.js`](ejercicio.js). Conviene hacerlo en este orden, porque
 cada paso se apoya en el anterior y se puede verificar visualmente:
