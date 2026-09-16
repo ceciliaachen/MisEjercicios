@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Rational Bézier browser checks</title>
+<pre id="result">RUNNING</pre>
+<iframe src="../index.html" width="1000" height="800"></iframe>
+<script>
+document.querySelector('iframe').onload = function () {
+ const w=this.contentWindow, d=w.document;
+ const check=(ok,msg)=>{if(!ok)throw Error(msg);};
+ try {
+  check(w.gl.getProgramParameter(w.curveDrawer.prog,w.gl.LINK_STATUS),'Shader link');
+  check(w.gl.getUniformLocation(w.curveDrawer.prog,'w1')!==null,'Active weight uniform');
+  check(!d.getElementById('weight0') && !d.getElementById('weight3'),'Only internal weight controls');
+  check(w.anchors.length===2,'Initial anchors');
+  const input=d.getElementById('weight1');
+  input.value='3'; input.dispatchEvent(new w.Event('input'));
+  check(w.anchors[0].outw===3 && w.segment(0).p1.w===3,'Slider to model');
+  const gpu=w.gl.getUniform(w.curveDrawer.prog,w.curveDrawer.w1);
+  check(gpu===3,'Model to GPU');
+  for(const id of ['showCasteljau','showTangent','showOsculating']) {
+   d.getElementById(id).checked=true;
+   d.getElementById(id).dispatchEvent(new w.Event('change'));
+  }
+  check(d.querySelector('#g-casteljau .casteljau-point'),'Rational overlay');
+  w.addAnchor(750,550); w.selected=0; w.redraw();
+  w.setSegmentWeight(3,2);
+  check(w.segment(0).p3.w===1 && w.segment(1).p0.w===1,'Fixed endpoint weights');
+  const mode=d.getElementById('continuity'); mode.value='C1'; mode.dispatchEvent(new w.Event('change'));
+  w.setSegmentWeight(2,0.5);
+  const a=w.anchors[1];
+  check(Math.abs(a.inw*(a.x-a.inx)-a.outw*(a.outx-a.x))<1e-7,'Weighted C1');
+  w.setSegmentWeight(2,NaN); check(a.inw===0.5,'Reject invalid weight');
+  d.getElementById('resetWeights').click();
+  check(Object.values(w.segment(0)).every(p=>p.w===1),'Reset weights');
+  check(w.gl.getError()===w.gl.NO_ERROR,'WebGL error');
+  d.getElementById('clear').click();
+  check(d.getElementById('weightsPanel').disabled,'Empty state');
+  w.addAnchor(100,100); check(d.getElementById('weightsPanel').disabled,'Single anchor');
+  w.addAnchor(300,200); check(!d.getElementById('weightsPanel').disabled,'Reenabled controls');
+  w.deleteAnchor(1); check(d.getElementById('weightsPanel').disabled,'Delete anchor');
+  document.getElementById('result').textContent='PASS: shader compilation, weight UI, GPU upload, overlays, fixed endpoint weights, C1, validation, reset, clear, add/delete';
+ } catch(e) { document.getElementById('result').textContent='FAIL: '+e.stack; }
+};
+</script>
