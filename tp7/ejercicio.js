@@ -103,20 +103,36 @@ var bezierVS = `
 		// 3) dividí ANTES de aplicar mvp. 
 
 		// 1) Las cuatro bases de Bernstein para una curva cúbica.
+		float u  = 1.0 - t;
+		float B0 = u * u * u;
+		float B1 = 3.0 * u * u * t;
+		float B2 = 3.0 * u * t * t;
+		float B3 = t * t * t;
 
 		// 2) JavaScript envía w1 y w2 como uniforms escalares.
 		// Los extremos tienen peso 1 y no necesitan uniforms adicionales.
+		float c0 = B0;
+		float c1 = B1 * w1;
+		float c2 = B2 * w2;
+		float c3 = B3;
 
 		// 3) Cada punto aporta al numerador su posición multiplicada
 		// por su base de Bernstein y su peso. Cada término es un vec2.
 
+		// Numerador vectorial: sum(B_i(t) * w_i * P_i)
+		vec2 numerador = c0 * p0 + c1 * p1 + c2 * p2 + c3 * p3;
+
 		// 4) El denominador suma los mismos coeficientes, sin posiciones.
 		// Si todos los pesos son 1, vale B0 + B1 + B2 + B3 = 1.
 		
+		// Denominador escalar: sum(B_i(t) * w_i)
+		float denominador = c0 + c1 + c2 + c3;
+
 		// 5) Normalizamos cada coordenada para obtener el punto R(t).
+		vec2 R = numerador / denominador;
 		
 		// 6) Transformamos el punto de píxeles a coordenadas de pantalla.
-		gl_Position = mvp * vec4(0.0, 0.0, 0.0, 1.0);
+		gl_Position = mvp * vec4(R.x, R.y, 0.0, 1.0);
 	}
 `;
 
