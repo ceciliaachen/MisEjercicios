@@ -1,0 +1,8 @@
+# Quad centered at origin in XY plane
+# Vertices (4 vertices, one at each corner)
+v -0.5 -0.5 0.0
+v  0.5 -0.5 0.0
+v  0.5  0.5 0.0
+v -0.5  0.5 0.0
+# Face 
+f 1 2 3 4
