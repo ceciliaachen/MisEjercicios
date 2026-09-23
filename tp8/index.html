@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP 8 · Crecimiento de regiones</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <!-- Dependencias locales: se puede abrir este HTML sin servidor ni internet. -->
+    <script defer src="vendor/three.min.js"></script>
+    <script defer src="vendor/OrbitControls.js"></script>
+    <script defer src="halfedge.js"></script>
+    <script defer src="assets/head.js"></script>
+    <script defer src="models.js"></script>
+    <script defer src="ejercicio.js"></script>
+    <script defer src="viewer.js"></script>
+    <script defer src="app.js"></script>
+</head>
+<body>
+    <header><h1>TP 8 · Crecimiento de regiones</h1></header>
+
+    <main class="workspace">
+        <aside class="sidebar" aria-label="Controles">
+            <div class="control">
+                <label for="model">Malla</label>
+                <select id="model">
+                    <option value="bean">Bean</option>
+                    <option value="head">Rostro</option>
+                    <option value="cube">Cubo triangulado</option>
+                    <option value="folded">Lámina plegada</option>
+                </select>
+            </div>
+
+            <div class="control">
+                <label for="angle" title="Ángulo máximo entre las normales de dos caras vecinas">Ángulo máximo</label>
+                <div class="angle-control">
+                    <input id="angle" type="range" min="0" max="180" step="1" value="6">
+                    <input id="angle-value" type="number" min="0" max="180" step="1" value="6" aria-label="Ángulo máximo en grados"><span>°</span>
+                </div>
+            </div>
+
+            <div class="selection">
+                <p>Semilla: <span id="seed-label">—</span></p>
+                <p>Selección: <span id="selected-count">0</span> / <span id="total-count">0</span> caras</p>
+                <button id="clear-selection" type="button" disabled>Limpiar selección</button>
+                <p id="selection-status" class="sr-only" role="status"></p>
+            </div>
+
+            <div class="display-options">
+                <label><input id="show-edges" type="checkbox" checked> Triangulación</label>
+                <label><input id="show-boundary" type="checkbox" checked> Contorno</label>
+            </div>
+            <button id="reset-camera" type="button">Restablecer vista</button>
+
+            <p id="error-message" class="error" role="alert" hidden></p>
+        </aside>
+
+        <section id="viewport" class="viewport" aria-label="Visor de la malla">
+            <div class="legend" aria-label="Referencias de color">
+                <span><i class="swatch seed-swatch"></i> Semilla</span>
+                <span><i class="swatch region-swatch"></i> Región</span>
+            </div>
+            <span id="hover-label"></span>
+            <p id="empty-hint">Clic en una cara para seleccionar.</p>
+            <noscript><p class="error">Activá JavaScript para usar el visor.</p></noscript>
+        </section>
+    </main>
+
+    <footer><span id="mesh-stats"></span><span>Arrastrar: girar · Rueda / pellizco: zoom</span></footer>
+</body>
+</html>
