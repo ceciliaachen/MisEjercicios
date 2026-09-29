@@ -38,7 +38,30 @@ function crecerRegion(caraInicial, anguloMaximo) {
         return region;
     }
 
-    // TODO
+    region.add(caraInicial.id);
+    const cola = [caraInicial];
+    let i = 0; // índice de lectura 
+
+    while (i < cola.length) {
+        const actual = cola[i++];
+        
+        // Recorre las half-edges de la cara actual
+        const inicio = actual.halfEdge;
+        let h = inicio;
+        do {
+            const twin = h.twin;
+            if (twin !== null) {                        // null = borde de la malla
+                const vecina = twin.face;
+                if (!region.has(vecina.id) &&
+                    angleBetweenFaces(actual, vecina) <= anguloMaximo) { // comparación local
+                    region.add(vecina.id);
+                    cola.push(vecina);
+                }
+            }
+            h = h.next;
+        } while (h !== inicio);
+    }
 
     return region;
 }
+
