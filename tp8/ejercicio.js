@@ -50,7 +50,7 @@ function crecerRegion(caraInicial, anguloMaximo) {
         let h = inicio;
         do {
             const twin = h.twin;
-            if (twin !== null) {                        // null = borde de la malla
+            if (twin !== null) {  // null = borde de la malla
                 const vecina = twin.face;
                 if (!region.has(vecina.id) &&
                     angleBetweenFaces(actual, vecina) <= anguloMaximo) { // comparación local
