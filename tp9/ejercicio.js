@@ -19,7 +19,13 @@
 function indiceCaso(valores, nivel) {
     let patron = '';
 
-    // ...
+    for (let i = 0; i < 8; i++) {
+        if (valores[i] < nivel) {
+            patron += '1';
+        } else {
+            patron += '0';  
+        }
+    }
 
     // indexOf devuelve la posición donde aparece este patrón en la lista.
     return CONFIGURACIONES.indexOf(patron);
@@ -39,7 +45,10 @@ function indiceCaso(valores, nivel) {
  */
 function interpolarArista(p0, p1, v0, v1, nivel) {
     
-    // ...
+    const t = (nivel - v0) / (v1 - v0);
+    const x = p0[0] + t * (p1[0] - p0[0]);
+    const y = p0[1] + t * (p1[1] - p0[1]);
+    const z = p0[2] + t * (p1[2] - p0[2]);
 
     // Devolver un punto nuevo, sin modificar p0 ni p1.
     return [x, y, z];
@@ -82,8 +91,36 @@ function marchingCubes(grilla, nivel) {
     let celdasActivas = 0;
     const n = grilla.resolucion;
 
-    // ...
+    for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - 1; j++) {
+            for (let k = 0; k < n - 1; k++) {
+                const cubo = grilla.cubo(i, j, k);
+                const indice = indiceCaso(cubo.valores, nivel);
+                const aristas = ARISTAS_POR_CASO[indice];
 
+                for (const a of aristas) {
+                    const v0 = a[0];
+                    const v1 = a[1];
+                    const p0 = cubo.vertices[v0];
+                    const p1 = cubo.vertices[v1];
+                    const val0 = cubo.valores[v0];
+                    const val1 = cubo.valores[v1];
+
+                    const puntoInterpolado = interpolarArista(p0, p1, val0, val1, nivel);
+                    vertices.push(puntoInterpolado);
+                }
+
+                if (indice !== 0 && indice !== 255) {
+                    celdasActivas++;
+                }
+
+                const triangulos = TRIANGULOS[indice];
+                for (const t of triangulos) {
+                    caras.push(t.map(idx => vertices.length - aristas.length + idx));
+                }
+            }  
+        }
+    }
     // E. Utilidad provista: compartir vértices coincidentes y quitar caras de
     // área cero. Durante el recorrido se puede construir cada triángulo aparte.
     const malla = compactarMalla(vertices, caras);
