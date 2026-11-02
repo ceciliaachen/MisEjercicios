@@ -40,7 +40,10 @@ varying vec3 vColor;
 vec3 iluminarPhong(vec3 posicion, vec3 normal);
 
 void transformarVertice() {
-    // TODO: completar.
+    vec4 aPosicionHomogenea = vec4(aPosicion, 1.0);
+    gl_Position = uMVP * aPosicionHomogenea;
+    vPosicion = (uMV * aPosicionHomogenea).xyz;
+    vNormal = normalize(uNormal * aNormal);
 }
 
 void main() {
@@ -63,7 +66,18 @@ void main() {
  */
 const iluminacionGLSL = `
 vec3 iluminarPhong(vec3 posicion, vec3 normal) {
-    // TODO: completar.
+    vec3 V = normalize(-posicion);
+    vec3 N = normalize(normal);
+    vec3 L = normalize(uLuz);
+    vec3 R = 2.0 * dot(L, N) * N - L;
+
+    vec3 componente_difusa = uI * uKd * max(dot(N, L), 0.0);
+
+    vec3 componente_especular = uKs * uI * pow(max(dot(V, R), 0.0), uAlpha);
+
+    vec3 componente_ambiente = uIa * uKa;
+    
+    return componente_difusa + componente_especular + componente_ambiente;
 }
 `;
 
@@ -92,7 +106,12 @@ varying vec3 vColor;
 vec3 iluminarPhong(vec3 posicion, vec3 normal);
 
 void main() {
-    // TODO: completar.
+    if (uGouraud) { 
+        gl_FragColor = vec4(vColor, 1.0);
+    }
+    else {
+        vec3 color_phong = iluminarPhong(vPosicion, vNormal);
+        gl_FragColor = vec4(color_phong, 1.0);
+    }
 }
 `;
-

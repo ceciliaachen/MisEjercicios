@@ -12,7 +12,11 @@
  */
 function crearTextura(gl, img) {
     // >>> COMPLETAR PASO 1
-    // ...
+    const textura = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, textura);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    return textura;
     // <<< FIN PASO 1
 }
 
@@ -23,7 +27,11 @@ function crearTextura(gl, img) {
  */
 function activarTextura(gl, programa, textura) {
     // >>> COMPLETAR PASO 2
-    // ...
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, textura);
+    const sampler = gl.getUniformLocation(programa, "texGPU");
+    gl.useProgram(programa);
+    gl.uniform1i(sampler, 0);
     // <<< FIN PASO 2
 }
 
@@ -66,7 +74,7 @@ void main() {
     // Con dos repeticiones, las UV recorren [0,2] en ambos ejes.
     // Al consultar la textura, vuelve a empezar la imagen en cada intervalo.
     // >>> COMPLETAR PASO 3
-    // ...
+    texCoord = aTexCoord * uRepeticiones;
     // <<< FIN PASO 3
 }
 `;
@@ -101,10 +109,13 @@ vec3 iluminarPhong(vec3 posicion, vec3 normal, vec3 ka, vec3 kd);
 
 void main() {
     // >>> COMPLETAR PASO 4
-    // Reemplazá estos ceros por los coeficientes que correspondan.
-    vec3 ka = vec3(0.0, 0.0, 0.0);
-    vec3 kd = vec3(0.0, 0.0, 0.0);
-    // ...
+    vec3 ka = uKa;
+    vec3 kd = uKd;
+    if (uUsarTextura) {
+        vec3 colorTextura = texture2D(texGPU, texCoord).rgb;
+        ka *= colorTextura;
+        kd *= colorTextura;
+    }
     // <<< FIN PASO 4
     // Calculamos la iluminación con el material de este fragmento.
     vec3 color = iluminarPhong(vPosicion, vNormal, ka, kd);
